@@ -39,12 +39,12 @@ bool in_working_set(std::vector<int> working_set, int element){
 }
 
 void OPT(std::vector<int> page_references, std::vector<int> working_set){
-	std::cout << "hello and welcome to the OPT algorithm simulation :)" << std::endl;
 	bool in_mem;
 	bool init = false;
 	int needs_swap;
 	int victim;
 	unsigned int max_distance;
+	int page_faults = 0;
 
 	for (unsigned int i=0; i<F; i++){
 		working_set.push_back(-1);
@@ -53,6 +53,8 @@ void OPT(std::vector<int> page_references, std::vector<int> working_set){
 	for (unsigned int i=0; i<page_references.size(); i++){
 		in_mem = in_working_set(working_set, page_references[i]);
 		if (!in_mem){
+			//page fault detected
+			page_faults++;
 			for (unsigned int a=0; a<working_set.size(); a++){
 				if(working_set[a] == -1){
 					working_set[a] = page_references[i];
@@ -97,4 +99,137 @@ void OPT(std::vector<int> page_references, std::vector<int> working_set){
 			}
 		}
 	}
+	std::cout << "End of OPT simulation (" << page_faults << " page faults)" << std::endl;
+}
+
+void LRU(std::vector<int> page_references, std::vector<int> working_set){
+	bool in_mem;
+	bool init = false;
+	int needs_swap;
+	int victim;
+	unsigned int max_distance;
+	int page_faults;
+
+	for (unsigned int i=0; i<F; i++){
+		working_set.push_back(-1);
+	}
+
+	for (unsigned int i=0; i<page_references.size(); i++){
+		in_mem = in_working_set(working_set, page_references[i]);
+		if (!in_mem){
+			//page fault detected
+			page_faults++;
+			for (unsigned int a=0; a<working_set.size(); a++){
+				if(working_set[a] == -1){
+					working_set[a] = page_references[i];
+					//std::cout << working_set[a] << std::endl;
+					working_set_printer(working_set, a);
+					std::cout << " (victim no page)" << std::endl;
+					init = true;
+					break;
+				}
+				init = false;
+			}
+			if(!init){
+				//page replacement needed
+				for (unsigned int a=0; a<working_set.size(); a++){
+					for (unsigned int j=i; j>0; j--){
+						//we have detected the closest refernce of the frame in mem currently
+						if (page_references[j] == working_set[a]){
+							if (a == 0){
+								max_distance = i-j;
+								needs_swap = a;
+							}
+							else{
+								if (i-j > max_distance){
+									max_distance = i-j;
+									needs_swap = a;
+								}
+								else if (i-j == max_distance){
+									if (working_set[needs_swap] > working_set[a]){
+										needs_swap = a;
+									}
+								}
+							}
+							break;
+						}
+					}
+				}
+				victim = working_set[needs_swap];
+				working_set[needs_swap] = page_references[i];
+				working_set_printer(working_set, needs_swap);
+				std::cout << " (victim page ";
+				std::cout << victim << ")" << std::endl;
+			}
+		}
+	}
+	std::cout << "End of OPT simulation (" << page_faults << " page faults)" << std::endl;
+}
+
+void LFU(std::vector<int> page_references, std::vector<int> working_set){
+	bool in_mem;
+	bool init = false;
+	int needs_swap;
+	int victim;
+	int min_frequency;
+	int page_faults;
+	std::vector<bool> page_faults_list;
+	std::vector<int> working_set_frequencies;
+
+	for (unsigned int i=0; i<F; i++){
+		working_set.push_back(-1);
+		working_set_frequencies.push_back(0);
+	}
+
+	for (unsigned int i=0; i<page_references.size(); i++){
+		in_mem = in_working_set(working_set, page_references[i]);
+		if (!in_mem){
+			page_faults_list.push_back(true);
+			//page fault detected
+			page_faults++;
+			for (unsigned int a=0; a<working_set.size(); a++){
+				if(working_set[a] == -1){
+					working_set[a] = page_references[i];
+					//std::cout << working_set[a] << std::endl;
+					working_set_printer(working_set, a);
+					std::cout << " (victim no page)" << std::endl;
+					init = true;
+					break;
+				}
+				init = false;
+			}
+			if(!init){
+				//page replacement needed
+				for (unsigned int a=0; a<working_set.size(); a++){
+					for (unsigned int j=i; j>0; j--){
+						//we have detected the closest refernce of the frame in mem currently
+						if (page_references[j] == working_set[a]){
+							if (!page_faults_list[j]){
+								working_set_frequencies[a]++;
+							}
+							else{
+								break;
+							}
+						}
+					}
+				}
+				min_frequency = working_set_frequencies[0];
+				needs_swap = 0;
+				for(unsigned int a=1; a<working_set_frequencies.size(); a++){
+					if (working_set_frequencies[a] < min_frequency){
+						needs_swap = a;
+					}
+				}
+				victim = working_set[needs_swap];
+				working_set[needs_swap] = page_references[i];
+				working_set_printer(working_set, needs_swap);
+				std::cout << " (victim page ";
+				std::cout << victim << ")" << std::endl;
+			}
+		}
+		else{
+			page_faults_list.push_back(false);
+		}
+	}
+	std::cout << "End of OPT simulation (" << page_faults << " page faults)" << std::endl;
 }
