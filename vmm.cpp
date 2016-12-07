@@ -231,5 +231,5 @@ void LFU(std::vector<int> page_references, std::vector<int> working_set){
 			page_faults_list.push_back(false);
 		}
 	}
-	std::cout << "End of OPT simulation (" << page_faults << " page faults)" << std::endl;
+	std::cout << "End of LFU simulation (" << page_faults << " page faults)" << std::endl;
 }
