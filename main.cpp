@@ -22,13 +22,13 @@ int main (int argc, char* argv[]){
 		std::cout << page_references[i] << std::endl;
 	}
 	*/
-	std::cout << "Simulating OPT with a fixed frame size of " << F << std::endl;
+	std::cout << "Simulating OPT with fixed frame size of " << F << std::endl;
 	OPT(page_references, working_set);
 	std::cout << std::endl;
-	std::cout << "Simulating LRU with a fixed frame size of " << F << std::endl;
+	std::cout << "Simulating LRU with fixed frame size of " << F << std::endl;
 	LRU(page_references, working_set);
 	std::cout << std::endl;
-	std::cout << "Simulating LFU with a fixed frame size of " << F << std::endl;
+	std::cout << "Simulating LFU with fixed frame size of " << F << std::endl;
 	LFU(page_references, working_set);
 
 	return 0;
