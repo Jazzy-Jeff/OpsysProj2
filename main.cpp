@@ -2,14 +2,19 @@
 #include <fstream>
 #include <vector>
 #include <stdlib.h>
+#include <string>
 
 #define F 3
+
+void Contig( std::string );
 
 void OPT(std::vector<int> page_references, std::vector<int> working_set);
 void LRU(std::vector<int> page_references, std::vector<int> working_set);
 void LFU(std::vector<int> page_references, std::vector<int> working_set);
 
 int main (int argc, char* argv[]){
+	Contig( std::string(argv[1]) );
+	return 0;
 	std::vector<int> page_references;
 	std::vector<int> working_set;
 	std::ifstream input(argv[1]);
