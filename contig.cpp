@@ -68,8 +68,8 @@ void Contig( std::string filename ) {
       std::cout << "[r" << j << "] " << p[i].run_time[j/3] << std::endl;
     }
   }
-  runNextFit( p, numberProcesses );
-  //runBestFit( p, numberProcesses );
+  //runNextFit( p, numberProcesses );
+  runBestFit( p, numberProcesses );
   return;
   //runWorstFit( p, numberProcesses );
 }
@@ -230,4 +230,135 @@ void runNextFit( my_proccess_t p[], int size )
     time++;
   }
   std::cout << "time " << time << "ms: Simulator ended (Contiguous -- Next-Fit)" << std::endl;
+}
+
+void runBestFit( my_proccess_t p[], int size )
+{
+  int time = 0, numRemoved = 0, skipped = 0;
+  mem_loc memory[ SIZE ];
+  memory[0].id = '.';
+  memory[0].size = SIZE;
+  memory[0].expires = -1;
+  std::cout << "time " << time << "ms: Simulator started (Contiguous -- Best-Fit)" << std::endl;
+  int step = 1, defrag_time = 0, best_index = -1;
+  while( (numRemoved + skipped) != size )
+  {
+    // adding
+    for( int i = 0; i < size; i++ )
+    {
+      for( int j = 0; j < p[i].count; j++)
+      {
+        if( (p[i].arrival_time[j]+defrag_time) == time )
+        {
+          std::cout << "time " << time << "ms: Process " << p[i].process_id << " arrived (requires " << p[i].mem_size << " frames)" << std::endl;
+          int k;
+          for( k = 0; k < SIZE; k += step)
+          {
+            if( memory[k].id == '.' && memory[k].size >= p[i].mem_size )
+            {
+              if( best_index != -1 )
+              {
+                if( memory[best_index].size > memory[k].size ) {best_index = k;}
+              }
+              else if( best_index == -1 ) best_index = k;
+            }
+            step = memory[k].size;
+          }
+          if( best_index == -1 )
+          {
+            if( is_enoughRoom( memory, p[i].mem_size ) )
+            {
+              int freeIndex = 0, moved = 0;
+              std::string procs_moved;
+              std::cout << "time " << time << "ms: Cannot place process " << p[i].process_id << " -- starting defragmentation" << std::endl;
+              for( int i = 0; i < SIZE; i += step )
+              {
+                step = memory[i].size;
+                if( memory[i].id != '.' && freeIndex == i )
+                {
+                  freeIndex += memory[i].size;
+                  // moved += 0;
+                }
+                else if( memory[i].id != '.' && freeIndex != i )
+                {
+                  if( procs_moved.length() != 0 ) procs_moved += ", ";
+                  procs_moved += memory[i].id;
+                  memory[freeIndex].id = memory[i].id;
+                  memory[freeIndex].size = memory[i].size;
+                  memory[freeIndex].expires = memory[i].expires;
+                  freeIndex += memory[i].size;
+                  moved += memory[i].size;
+                }
+              }
+              memory[freeIndex].id = '.';
+              memory[freeIndex].size = SIZE - freeIndex;
+              memory[freeIndex].expires = -1;
+              time += moved;
+              defrag_time += (moved*T_MEMMOVE);
+              std::cout << "time " << time << "ms: Defragmentation complete (moved " << moved << " frames: " << procs_moved << ")" << std::endl;
+              printMemory( memory );
+              memory[freeIndex].id = p[i].process_id;
+              memory[freeIndex].size = p[i].mem_size;
+              memory[freeIndex].expires = p[i].run_time[j];
+              std::cout << "time " << time << "ms: Placed process " << p[i].process_id << std::endl;
+              freeIndex += p[i].mem_size;
+              for( int i = 0; i < SIZE; i += step )
+              {
+                if( memory[i].id != '.' )
+                {
+                  memory[i].expires += (moved*T_MEMMOVE);
+                  step = memory[i].size;
+                  continue;
+                }
+                break;
+              }
+              if( freeIndex != SIZE )
+              {
+                memory[freeIndex].id = '.';
+                memory[freeIndex].size = SIZE - freeIndex;
+                memory[freeIndex].expires = -1;
+              }
+            }
+            else
+            {
+              std::cout << "time " << time << "ms: Cannot place process " << p[i].process_id << " -- skipped!" << std::endl;
+              skipped++;
+            }
+            printMemory( memory );
+          }
+          else
+          {
+            std::cout << "best_index.size " << memory[best_index].size << std::endl;
+            memory[best_index].id = p[i].process_id;
+            std::cout << "time " << time << "ms: Placed process " << p[i].process_id << std::endl;
+            if( memory[best_index].size != p[i].mem_size )
+            {
+              memory[best_index+p[i].mem_size].id = '.';
+              memory[best_index+p[i].mem_size].size = memory[best_index].size - p[i].mem_size;
+              memory[best_index+p[i].mem_size].expires = -1;
+            }
+            memory[best_index].size = p[i].mem_size;
+            memory[best_index].expires = time + p[i].run_time[j];
+            printMemory( memory );
+            best_index = -1;
+          }
+        }
+      }
+    }
+    // removing
+    for( int i = 0; i < SIZE; i += step )
+    {
+      if( memory[i].expires == time )
+      {
+        std::cout << "time " << time << "ms: Process " << memory[i].id << " removed:" << std::endl;
+        memory[i].id = '.';
+        memory[i].expires = -1;
+        printMemory( memory );
+        numRemoved++;
+      }
+      step = memory[i].size;
+    }
+    time++;
+  }
+  std::cout << "time " << time << "ms: Simulator ended (Contiguous -- Best-Fit)" << std::endl;
 }
