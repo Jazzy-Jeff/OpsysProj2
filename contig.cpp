@@ -23,6 +23,7 @@ struct mem_loc {
 
 void Contig( std:: string );
 void printMemory( mem_loc m[] );
+int is_enoughRoom( mem_loc m[], int );
 void runNextFit ( my_proccess_t p[], int * );
 void runBestFit ( my_proccess_t p[], int * );
 void runWorstFit( my_proccess_t p[], int * );
@@ -69,7 +70,7 @@ void Contig( std::string filename ) {
   runNextFit( p, &numberProcesses );
   return;
   //runBestFit( a_times, r_times );
-    //runWorstFit( a_times, r_times );
+  //runWorstFit( a_times, r_times );
 }
 
 void printMemory( mem_loc memory[] )
@@ -92,6 +93,19 @@ void printMemory( mem_loc memory[] )
   std::cout << std::endl;
 }
 
+// Checks if there is enough room for the memory to take the proccess
+int is_enoughRoom( mem_loc m[SIZE], int mem_size )
+{
+  int size = 0, step = 1;
+  for( int i = 0; i < SIZE; i+= step )
+  {
+    if( m[i].id == '.' ) size += m[i].size;
+    step = m[i].size;
+  }
+  if( size == 0 || size < mem_size ) return 0; // false
+  return 1; // true
+}
+
 void runNextFit( my_proccess_t p[], int * size )
 {
   int time = 0, numRemoved = 0, skipped = 0;
@@ -100,7 +114,7 @@ void runNextFit( my_proccess_t p[], int * size )
   memory[0].size = SIZE;
   memory[0].expires = -1;
   std::cout << "time " << time << "ms: Simulator started (Contiguous -- Next-Fit)" << std::endl;
-  int step = 1;
+  int step = 1;//, defrag_time = 0;
   while( (numRemoved + skipped) != *size )
   {
     // adding
@@ -114,7 +128,6 @@ void runNextFit( my_proccess_t p[], int * size )
           int k;
           for( k = 0; k < SIZE; k += step)
           {
-            // std::cout << "checking memory[" << k << "] = {" << memory[k].id << ", " << memory[k].size << ", " << memory[k].expires << "}" << std::endl;
             if( memory[k].id == '.' && memory[k].size >= p[i].mem_size )
             {
               std::cout << "time " << time << "ms: Placed process " << p[i].process_id << std::endl;
@@ -132,13 +145,51 @@ void runNextFit( my_proccess_t p[], int * size )
             }
             else
             {
-              step = memory[k].size ;
+              step = memory[k].size;
             }
           }
           if( k == SIZE )
           {
-            std::cout << "time " << time << "ms: Cannot place process " << p[i].process_id << " -- skipped!" << std::endl;
-            skipped++;
+            if( is_enoughRoom( memory, p[i].mem_size ) )
+            {
+              int freeIndex = 0, moved = 0;
+              //char * procs = (char*)std::calloc(1, char);
+              std::cout << "time " << time << "ms: Cannot place process " << p[i].process_id << " -- starting defragmentation" << std::endl;
+              for( int i = 0; i < SIZE; i += step )
+              {
+                step = memory[i].size;
+                if( memory[i].id != '.' && freeIndex == i )
+                {
+                  freeIndex += memory[i].size;
+                  moved += 0;
+                }
+                else if( memory[i].id != '.' && freeIndex != i )
+                {
+                  memory[freeIndex].id = memory[i].id;
+                  memory[freeIndex].size = memory[i].size;
+                  memory[freeIndex].expires = memory[i].expires;
+                  freeIndex += memory[i].size;
+                  moved += memory[i].size;
+                }
+              }
+              memory[freeIndex].id = p[i].process_id;
+              memory[freeIndex].size = p[i].mem_size;
+              memory[freeIndex].expires = p[i].run_time[j];
+              freeIndex += p[i].mem_size;
+              if( freeIndex != SIZE )
+              {
+                memory[freeIndex].id = '.';
+                memory[freeIndex].size = SIZE - freeIndex;
+                memory[freeIndex].expires = -1;
+              }
+              //skipped++; // until it gets loaded then remove
+            }
+            else
+            {
+              std::cout << "time " << time << "ms: Cannot place process " << p[i].process_id << " -- skipped!" << std::endl;
+              skipped++;
+            }
+            printMemory( memory );
           }
         }
       }
