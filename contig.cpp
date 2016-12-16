@@ -175,15 +175,28 @@ void runNextFit( my_proccess_t p[], int size )
                   moved += memory[i].size;
                 }
               }
-              memory[freeIndex].id = p[i].process_id;
-              memory[freeIndex].size = p[i].mem_size;
-              memory[freeIndex].expires = p[i].run_time[j];
+              memory[freeIndex].id = '.';
+              memory[freeIndex].size = SIZE - freeIndex;
+              memory[freeIndex].expires = -1;
               time += moved;
               defrag_time += (moved*T_MEMMOVE);
               std::cout << "time " << time << "ms: Defragmentation complete (moved " << moved << " frames: " << procs_moved << ")" << std::endl;
               printMemory( memory );
+              memory[freeIndex].id = p[i].process_id;
+              memory[freeIndex].size = p[i].mem_size;
+              memory[freeIndex].expires = p[i].run_time[j];
               std::cout << "time " << time << "ms: Placed process " << p[i].process_id << std::endl;
               freeIndex += p[i].mem_size;
+              for( int i = 0; i < SIZE; i += step )
+              {
+                if( memory[i].id != '.' )
+                {
+                  memory[i].expires += (moved*T_MEMMOVE);
+                  step = memory[i].size;
+                  continue;
+                }
+                break;
+              }
               if( freeIndex != SIZE )
               {
                 memory[freeIndex].id = '.';
