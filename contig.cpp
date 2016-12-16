@@ -6,6 +6,7 @@
 
 #define SIZE 256
 #define ROW 32
+#define T_MEMMOVE 1 // Time it takes to move one frame
 
 struct my_proccess_t {
   char process_id;
@@ -24,9 +25,9 @@ struct mem_loc {
 void Contig( std:: string );
 void printMemory( mem_loc m[] );
 int is_enoughRoom( mem_loc m[], int );
-void runNextFit ( my_proccess_t p[], int * );
-void runBestFit ( my_proccess_t p[], int * );
-void runWorstFit( my_proccess_t p[], int * );
+void runNextFit ( my_proccess_t p[], int );
+void runBestFit ( my_proccess_t p[], int );
+void runWorstFit( my_proccess_t p[], int );
 
 void Contig( std::string filename ) {
   std::ifstream input(filename.c_str());
@@ -67,10 +68,10 @@ void Contig( std::string filename ) {
       std::cout << "[r" << j << "] " << p[i].run_time[j/3] << std::endl;
     }
   }
-  runNextFit( p, &numberProcesses );
+  runNextFit( p, numberProcesses );
+  //runBestFit( p, numberProcesses );
   return;
-  //runBestFit( a_times, r_times );
-  //runWorstFit( a_times, r_times );
+  //runWorstFit( p, numberProcesses );
 }
 
 void printMemory( mem_loc memory[] )
@@ -106,7 +107,7 @@ int is_enoughRoom( mem_loc m[SIZE], int mem_size )
   return 1; // true
 }
 
-void runNextFit( my_proccess_t p[], int * size )
+void runNextFit( my_proccess_t p[], int size )
 {
   int time = 0, numRemoved = 0, skipped = 0;
   mem_loc memory[ SIZE ];
@@ -114,15 +115,15 @@ void runNextFit( my_proccess_t p[], int * size )
   memory[0].size = SIZE;
   memory[0].expires = -1;
   std::cout << "time " << time << "ms: Simulator started (Contiguous -- Next-Fit)" << std::endl;
-  int step = 1;//, defrag_time = 0;
-  while( (numRemoved + skipped) != *size )
+  int step = 1, defrag_time = 0;
+  while( (numRemoved + skipped) != size )
   {
     // adding
-    for( int i = 0; i < *size; i++ )
+    for( int i = 0; i < size; i++ )
     {
       for( int j = 0; j < p[i].count; j++)
       {
-        if( p[i].arrival_time[j] == time )
+        if( (p[i].arrival_time[j]+defrag_time) == time )
         {
           std::cout << "time " << time << "ms: Process " << p[i].process_id << " arrived (requires " << p[i].mem_size << " frames)" << std::endl;
           int k;
@@ -153,7 +154,7 @@ void runNextFit( my_proccess_t p[], int * size )
             if( is_enoughRoom( memory, p[i].mem_size ) )
             {
               int freeIndex = 0, moved = 0;
-              //char * procs = (char*)std::calloc(1, char);
+              std::string procs_moved;
               std::cout << "time " << time << "ms: Cannot place process " << p[i].process_id << " -- starting defragmentation" << std::endl;
               for( int i = 0; i < SIZE; i += step )
               {
@@ -161,10 +162,12 @@ void runNextFit( my_proccess_t p[], int * size )
                 if( memory[i].id != '.' && freeIndex == i )
                 {
                   freeIndex += memory[i].size;
-                  moved += 0;
+                  // moved += 0;
                 }
                 else if( memory[i].id != '.' && freeIndex != i )
                 {
+                  if( procs_moved.length() != 0 ) procs_moved += ", ";
+                  procs_moved += memory[i].id;
                   memory[freeIndex].id = memory[i].id;
                   memory[freeIndex].size = memory[i].size;
                   memory[freeIndex].expires = memory[i].expires;
@@ -175,6 +178,11 @@ void runNextFit( my_proccess_t p[], int * size )
               memory[freeIndex].id = p[i].process_id;
               memory[freeIndex].size = p[i].mem_size;
               memory[freeIndex].expires = p[i].run_time[j];
+              time += moved;
+              defrag_time += (moved*T_MEMMOVE);
+              std::cout << "time " << time << "ms: Defragmentation complete (moved " << moved << " frames: " << procs_moved << ")" << std::endl;
+              printMemory( memory );
+              std::cout << "time " << time << "ms: Placed process " << p[i].process_id << std::endl;
               freeIndex += p[i].mem_size;
               if( freeIndex != SIZE )
               {
@@ -182,7 +190,6 @@ void runNextFit( my_proccess_t p[], int * size )
                 memory[freeIndex].size = SIZE - freeIndex;
                 memory[freeIndex].expires = -1;
               }
-              //skipped++; // until it gets loaded then remove
             }
             else
             {
