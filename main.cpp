@@ -14,7 +14,7 @@ void LFU(std::vector<int> page_references, std::vector<int> working_set);
 
 int main (int argc, char* argv[]){
 	Contig( std::string(argv[1]) );
-	return 0;
+
 	std::vector<int> page_references;
 	std::vector<int> working_set;
 	std::ifstream input(argv[2]);
@@ -22,7 +22,7 @@ int main (int argc, char* argv[]){
 	while(input >> holder){
 		page_references.push_back(holder);
 	}
-	/*
+
 	for (unsigned int i=0; i<pages_references.size(); i++){
 		std::cout << page_references[i] << std::endl;
 	}
@@ -34,7 +34,6 @@ int main (int argc, char* argv[]){
 	std::cout << std::endl;
 	std::cout << "Simulating LFU with fixed frame size of " << F << std::endl;
 	LFU(page_references, working_set);
-	*/
 
 	return 0;
 }
