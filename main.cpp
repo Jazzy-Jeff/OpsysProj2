@@ -23,7 +23,7 @@ int main (int argc, char* argv[]){
 		page_references.push_back(holder);
 	}
 
-	for (unsigned int i=0; i<pages_references.size(); i++){
+	for (unsigned int i=0; i<page_references.size(); i++){
 		std::cout << page_references[i] << std::endl;
 	}
 	std::cout << "Simulating OPT with fixed frame size of " << F << std::endl;

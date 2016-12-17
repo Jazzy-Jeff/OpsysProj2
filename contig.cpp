@@ -50,7 +50,7 @@ void Contig( std::string filename ) {
   for( i = 0; i < numberProcesses; i++ )
   {
     std::getline( input, line );
-    std::cout << line << std::endl;
+    //std::cout << line << std::endl;
     std::regex_search( line, sm, express );
     p[i].process_id = sm[1].str()[0];
     p[i].mem_size = std::stoi( sm[2], nullptr );
@@ -69,8 +69,8 @@ void Contig( std::string filename ) {
     std::sregex_iterator it_end;
 
     while(it != it_end) {
-      std::cout << it->str(1) << "-";
-      std::cout << it->str(2) << std::endl;
+      //std::cout << it->str(1) << "-";
+      //std::cout << it->str(2) << std::endl;
       ++it;
       arrival_run_times_amounts++;
     }
