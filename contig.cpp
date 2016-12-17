@@ -151,7 +151,7 @@ void runNextFit( my_proccess_t p[], int size )
   memory[0].size = SIZE;
   memory[0].expires = -1;
   std::cout << "time " << time << "ms: Simulator started (Contiguous -- Next-Fit)" << std::endl;
-  int step = 1, defrag_time = 0;
+  int step = 1, defrag_time = 0, next_index = -1, last_index = -1;
   while( (numRemoved + skipped) != size )
   {
     // adding
@@ -167,25 +167,19 @@ void runNextFit( my_proccess_t p[], int size )
           {
             if( memory[k].id == '.' && memory[k].size >= p[i].mem_size )
             {
-              std::cout << "time " << time << "ms: Placed process " << p[i].process_id << ":" << std::endl;
-              memory[k].id = p[i].process_id;
-              if( memory[k].size != p[i].mem_size )
+              if( next_index != -1 )
               {
-                memory[k+p[i].mem_size].id = '.';
-                memory[k+p[i].mem_size].size = memory[k].size - p[i].mem_size;
-                memory[k+p[i].mem_size].expires = -1;
+                if( memory[next_index].size > memory[k].size )
+                {
+                  next_index = k;
+                  if( k > last_index ) break;
+                }
               }
-              memory[k].size = p[i].mem_size;
-              memory[k].expires = time + p[i].run_time[j];
-              printMemory( memory );
-              break;
+              else if( next_index == -1 ) next_index = k;
             }
-            else
-            {
-              step = memory[k].size;
-            }
+            step = memory[k].size;
           }
-          if( k == SIZE )
+          if( next_index == -1 )
           {
             if( is_enoughRoom( memory, p[i].mem_size ) )
             {
@@ -208,6 +202,7 @@ void runNextFit( my_proccess_t p[], int size )
                   memory[freeIndex].size = memory[i].size;
                   memory[freeIndex].expires = memory[i].expires;
                   freeIndex += memory[i].size;
+                  last_index = freeIndex;
                   moved += memory[i].size;
                 }
               }
@@ -223,6 +218,7 @@ void runNextFit( my_proccess_t p[], int size )
               memory[freeIndex].expires = p[i].run_time[j];
               std::cout << "time " << time << "ms: Placed process " << p[i].process_id << ":" << std::endl;
               freeIndex += p[i].mem_size;
+              last_index = freeIndex;
               for( int i = 0; i < SIZE; i += step )
               {
                 if( memory[i].id != '.' )
@@ -246,6 +242,21 @@ void runNextFit( my_proccess_t p[], int size )
               skipped++;
             }
             printMemory( memory );
+          }
+          else
+          {
+            memory[next_index].id = p[i].process_id;
+            std::cout << "time " << time << "ms: Placed process " << p[i].process_id << ":" << std::endl;
+            if( memory[next_index].size != p[i].mem_size )
+            {
+              memory[next_index+p[i].mem_size].id = '.';
+              memory[next_index+p[i].mem_size].size = memory[next_index].size - p[i].mem_size;
+              memory[next_index+p[i].mem_size].expires = -1;
+            }
+            memory[next_index].size = p[i].mem_size;
+            memory[next_index].expires = time + p[i].run_time[j];
+            printMemory( memory );
+            next_index = -1;
           }
         }
       }
