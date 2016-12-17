@@ -22,10 +22,7 @@ int main (int argc, char* argv[]){
 	while(input >> holder){
 		page_references.push_back(holder);
 	}
-
-	for (unsigned int i=0; i<page_references.size(); i++){
-		std::cout << page_references[i] << std::endl;
-	}
+	
 	std::cout << "Simulating OPT with fixed frame size of " << F << std::endl;
 	OPT(page_references, working_set);
 	std::cout << std::endl;

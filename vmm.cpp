@@ -151,7 +151,7 @@ void LRU(std::vector<int> page_references, std::vector<int> working_set){
 			if(!init){
 				//page replacement needed
 				for (unsigned int a=0; a<working_set.size(); a++){
-					for (unsigned int j=i; j>0; j--){
+					for (unsigned int j=i; j>=0; j--){
 						//we have detected the closest refernce of the frame in mem currently
 						if (page_references[j] == working_set[a]){
 							if (a == 0){
