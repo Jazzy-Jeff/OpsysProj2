@@ -33,7 +33,8 @@ void Contig( std::string filename ) {
   std::ifstream input(filename.c_str());
   int
     numberProcesses,
-    i
+    i,
+    arrival_run_times_amounts
   ;
   std::string
   line,
@@ -53,13 +54,48 @@ void Contig( std::string filename ) {
     std::regex_search( line, sm, express );
     p[i].process_id = sm[1].str()[0];
     p[i].mem_size = std::stoi( sm[2], nullptr );
-    std::regex_search( line, sm, arrival_run_times );
-    p[i].count = sm.size()/3;
+
+    /*
+    std::string::const_iterator searchStart( line.cbegin() );
+    while ( std::regex_search( searchStart, line.cend(), sm, arrival_run_times ) )
+    {
+        //cout << ( searchStart == str.cbegin() ? "" : " " ) << res[0];
+        //searchStart += res.position() + res.length();
+      searchStart += sm.position() + sm.length();
+    }
+    */
+    arrival_run_times_amounts = 0;
+    std::sregex_iterator it(line.begin(), line.end(), arrival_run_times);
+    std::sregex_iterator it_end;
+
+    while(it != it_end) {
+      std::cout << it->str(1) << "-";
+      std::cout << it->str(2) << std::endl;
+      ++it;
+      arrival_run_times_amounts++;
+    }
+
+    p[i].count = arrival_run_times_amounts;
     p[i].arrival_time = (int *)std::calloc( p[i].count, sizeof(int) );
     p[i].run_time = (int *)std::calloc( p[i].count, sizeof(int) );
 
-    // TODO: not getting all the arrival and run times for any given process
+    std::sregex_iterator it2(line.begin(), line.end(), arrival_run_times);
+    std::sregex_iterator it_end2;
 
+    int a=0;
+
+
+    while(it2 != it_end2) {
+      p[i].arrival_time[ a ] = std::stoi( it2->str(1) );
+      p[i].run_time[ a ] = std::stoi( it2->str(2) );
+      ++it2;
+      a++;
+    }
+
+    //std::regex_search( line, sm, arrival_run_times );
+
+    // TODO: not getting all the arrival and run times for any given process
+    /*
     for( unsigned int j = 0; j < sm.size(); j+=3 )
     {
       p[i].arrival_time[ j/3 ] = std::stoi( sm[j+1] );
@@ -67,6 +103,7 @@ void Contig( std::string filename ) {
       p[i].run_time[ j/3 ] = std::stoi( sm[j+2] );
       std::cout << "[r" << j << "] " << p[i].run_time[j/3] << std::endl;
     }
+    */
   }
   runNextFit( p, numberProcesses );
   runBestFit( p, numberProcesses );
@@ -130,7 +167,7 @@ void runNextFit( my_proccess_t p[], int size )
           {
             if( memory[k].id == '.' && memory[k].size >= p[i].mem_size )
             {
-              std::cout << "time " << time << "ms: Placed process " << p[i].process_id << std::endl;
+              std::cout << "time " << time << "ms: Placed process " << p[i].process_id << ":" << std::endl;
               memory[k].id = p[i].process_id;
               if( memory[k].size != p[i].mem_size )
               {
@@ -184,7 +221,7 @@ void runNextFit( my_proccess_t p[], int size )
               memory[freeIndex].id = p[i].process_id;
               memory[freeIndex].size = p[i].mem_size;
               memory[freeIndex].expires = p[i].run_time[j];
-              std::cout << "time " << time << "ms: Placed process " << p[i].process_id << std::endl;
+              std::cout << "time " << time << "ms: Placed process " << p[i].process_id << ":" << std::endl;
               freeIndex += p[i].mem_size;
               for( int i = 0; i < SIZE; i += step )
               {
@@ -299,7 +336,7 @@ void runBestFit( my_proccess_t p[], int size )
               memory[freeIndex].id = p[i].process_id;
               memory[freeIndex].size = p[i].mem_size;
               memory[freeIndex].expires = p[i].run_time[j];
-              std::cout << "time " << time << "ms: Placed process " << p[i].process_id << std::endl;
+              std::cout << "time " << time << "ms: Placed process " << p[i].process_id << ":" << std::endl;
               freeIndex += p[i].mem_size;
               for( int i = 0; i < SIZE; i += step )
               {
@@ -328,7 +365,7 @@ void runBestFit( my_proccess_t p[], int size )
           else
           {
             memory[best_index].id = p[i].process_id;
-            std::cout << "time " << time << "ms: Placed process " << p[i].process_id << std::endl;
+            std::cout << "time " << time << "ms: Placed process " << p[i].process_id << ":" << std::endl;
             if( memory[best_index].size != p[i].mem_size )
             {
               memory[best_index+p[i].mem_size].id = '.';
@@ -429,7 +466,7 @@ void runWorstFit( my_proccess_t p[], int size )
               memory[freeIndex].id = p[i].process_id;
               memory[freeIndex].size = p[i].mem_size;
               memory[freeIndex].expires = p[i].run_time[j];
-              std::cout << "time " << time << "ms: Placed process " << p[i].process_id << std::endl;
+              std::cout << "time " << time << "ms: Placed process " << p[i].process_id << ":" << std::endl;
               freeIndex += p[i].mem_size;
               for( int i = 0; i < SIZE; i += step )
               {
@@ -458,7 +495,7 @@ void runWorstFit( my_proccess_t p[], int size )
           else
           {
             memory[worst_index].id = p[i].process_id;
-            std::cout << "time " << time << "ms: Placed process " << p[i].process_id << std::endl;
+            std::cout << "time " << time << "ms: Placed process " << p[i].process_id << ":" << std::endl;
             if( memory[worst_index].size != p[i].mem_size )
             {
               memory[worst_index+p[i].mem_size].id = '.';

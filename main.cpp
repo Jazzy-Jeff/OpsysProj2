@@ -17,7 +17,7 @@ int main (int argc, char* argv[]){
 	return 0;
 	std::vector<int> page_references;
 	std::vector<int> working_set;
-	std::ifstream input(argv[1]);
+	std::ifstream input(argv[2]);
 	int holder;
 	while(input >> holder){
 		page_references.push_back(holder);
@@ -26,7 +26,6 @@ int main (int argc, char* argv[]){
 	for (unsigned int i=0; i<pages_references.size(); i++){
 		std::cout << page_references[i] << std::endl;
 	}
-	*/
 	std::cout << "Simulating OPT with fixed frame size of " << F << std::endl;
 	OPT(page_references, working_set);
 	std::cout << std::endl;
@@ -35,6 +34,7 @@ int main (int argc, char* argv[]){
 	std::cout << std::endl;
 	std::cout << "Simulating LFU with fixed frame size of " << F << std::endl;
 	LFU(page_references, working_set);
+	*/
 
 	return 0;
 }
