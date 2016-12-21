@@ -161,6 +161,11 @@ void Contig( std::string filename ) {
   runNextFit( p, numberProcesses );
   runBestFit( p, numberProcesses );
   runWorstFit( p, numberProcesses );
+
+  for( i = 0; i < numberProcesses; i++ ){
+    free(p[i].arrival_time);
+    free(p[i].run_time);
+  }
 }
 
 void printMemory( mem_loc memory[] )
