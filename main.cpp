@@ -22,7 +22,7 @@ int main (int argc, char* argv[]){
 	while(input >> holder){
 		page_references.push_back(holder);
 	}
-	/*
+	
 	std::cout << "Simulating OPT with fixed frame size of " << F << std::endl;
 	OPT(page_references, working_set);
 	std::cout << std::endl;
@@ -31,6 +31,6 @@ int main (int argc, char* argv[]){
 	std::cout << std::endl;
 	std::cout << "Simulating LFU with fixed frame size of " << F << std::endl;
 	LFU(page_references, working_set);
-	*/
+	
 	return 0;
 }
