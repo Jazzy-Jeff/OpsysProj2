@@ -33,8 +33,8 @@ void Contig( std::string filename ) {
   std::ifstream input(filename.c_str());
   int
     numberProcesses,
-    i,
-    arrival_run_times_amounts
+    i
+    //arrival_run_times_amounts
   ;
   std::string
   line,
@@ -51,10 +51,61 @@ void Contig( std::string filename ) {
   {
     std::getline( input, line );
     //std::cout << line << std::endl;
-    std::regex_search( line, sm, express );
-    p[i].process_id = sm[1].str()[0];
-    p[i].mem_size = std::stoi( sm[2], nullptr );
+    //std::regex_search( line, sm, express );
+    //p[i].process_id = sm[1].str()[0];
+    //p[i].mem_size = std::stoi( sm[2], nullptr );
 
+    p[i].arrival_time = (int *)std::calloc( line.length(), sizeof(int) );
+    p[i].run_time = (int *)std::calloc( line.length(), sizeof(int) );
+
+    unsigned int index = 0;
+    unsigned int index_start = 0;
+    int a = 0;
+    while (index < line.size()){
+      //std::cout << line[index] << std::endl;
+      if (index == 0){
+        /*
+        while (line[index] != ' '){
+          index++;
+        }
+        p[i].process_id = line.substr(0, index)[0];
+        */
+        p[i].process_id = line[0];
+        std::cout << line[0] << " <- pid" << std::endl;
+      }
+      else if (index == 2){
+        
+        while (line[index] != ' '){
+          index++;
+        }
+        p[i].mem_size = std::stoi(line.substr(2, index));
+        
+        std::cout << p[i].mem_size << " <- mem size" << std::endl;
+      }
+      else if (index != 1){
+        index_start = index;
+        while (line[index] != '/'){
+          index++;
+        }
+        p[i].arrival_time[a] = std::stoi(line.substr(index_start, index));
+        std::cout << p[i].arrival_time[a] << " <- arrival_time" << std::endl;
+        
+        index++;
+        
+        index_start = index;
+        while (line[index] != ' '){
+          index++;
+        }
+        p[i].run_time[a] = std::stoi(line.substr(index_start, index));
+        
+        std::cout << p[i].run_time[a] << " <- run time" << std::endl;
+
+        a++;
+      }
+      index++;
+    }
+    p[i].count = a;
+    
     /*
     std::string::const_iterator searchStart( line.cbegin() );
     while ( std::regex_search( searchStart, line.cend(), sm, arrival_run_times ) )
@@ -64,6 +115,7 @@ void Contig( std::string filename ) {
       searchStart += sm.position() + sm.length();
     }
     */
+    /*
     arrival_run_times_amounts = 0;
     std::sregex_iterator it(line.begin(), line.end(), arrival_run_times);
     std::sregex_iterator it_end;
@@ -91,6 +143,7 @@ void Contig( std::string filename ) {
       ++it2;
       a++;
     }
+    */
 
     //std::regex_search( line, sm, arrival_run_times );
 
